@@ -48,6 +48,7 @@ SOURCES = \
 	patest_toomanysines.c \
 	patest_underflow.c \
 	patest_wire.c \
+	pa_devs.c \
 
 # removed since it doesn't work as expected on MacOSX
 #	patest_latency.c \
