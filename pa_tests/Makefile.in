@@ -1,0 +1,62 @@
+#
+# PortAudio pa_tests Makefile.in
+#
+# By: H. Gregory Silber
+#
+# WARNING: MODIFY THIS FILE AT YOUR OWN RISK.  THIS FILE SOON TO BE REMOVED
+# 	AND REPLACED WITH AUTO GENERATED FILES USING AUTOMAKE
+#	IF YOU MUST MODIFY THIS FILE, PLEASE NOTE YOUR CHANGES IN DETAIL
+#	DIRECTLY BENEATH THIS MESSAGE
+#
+
+PREFIX = @prefix@
+CC = @CC@
+CFLAGS = @CFLAGS@ -I../pa_common
+LIBS = @LIBS@ -lportaudio
+AR = @AR@
+RANLIB = @RANLIB@
+INSTALL = @INSTALL@
+SHARED_FLAGS = @SHARED_FLAGS@
+DLL_LIBS = @DLL_LIBS@
+
+TESTS = \
+	../bin/patest_buffer \
+	../bin/patest_clip \
+	../bin/patest_dither \
+	../bin/patest_hang \
+	../bin/patest_latency \
+	../bin/patest_leftright \
+	../bin/patest_longsine \
+	../bin/patest_many \
+	../bin/patest_maxsines \
+	../bin/patest_multi_sine \
+	../bin/patest_pink \
+	../bin/patest_record \
+	../bin/patest_ringmix \
+	../bin/patest_saw \
+	../bin/patest_sine8 \
+	../bin/patest_sine \
+	../bin/patest_sine_formats \
+	../bin/patest_sine_time \
+	../bin/patest_stop \
+	../bin/patest_sync \
+	../bin/patest_toomanysines \
+	../bin/patest_underflow \
+	../bin/patest_wire
+
+all: tests
+
+tests: $(TESTS)
+
+$(TESTS): ../bin/%: Makefile %.c
+	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS)
+
+clean:
+	echo No Intermediate files
+
+distclean: clean
+	rm -f Makefile
+	rm -f $(TESTS) 
+
+%.o: %.c Makefile 
+	$(CC) -c $(CFLAGS) $< -o $@
