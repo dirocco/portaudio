@@ -38,8 +38,7 @@
                - Allow stream to open if sample rate within 10% of desired rate.
 */
 
-// #include "pa_unix.h"
-#include "pa_unix.c"
+#include "pa_unix.h"
 
 #ifdef __linux__
 #include <linux/soundcard.h>

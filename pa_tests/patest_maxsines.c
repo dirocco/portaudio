@@ -1,5 +1,5 @@
 /*
- * $Id: patest_maxsines.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_maxsines.c,v 1.2 2003/04/29 02:20:31 darreng Exp $
  * patest_maxsines.c
  * How many sine waves can we calculate and play in less than 80% CPU Load.
  *
@@ -180,12 +180,17 @@ int main(void)
     }
     while( (load < MAX_USAGE) && (data.numSines < MAX_SINES) );
 
+    printf("Press ENTER to stop.\n" ); fflush(stdout);
+    getchar();
+
+	printf("CPU load = %f\n", Pa_GetCPULoad( stream ) );
     err = Pa_StopStream( stream );
     if( err != paNoError ) goto error;
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;
     Pa_Terminate();
     printf("Test finished.\n");
+    fflush( stdout );
     return err;
 error:
     Pa_Terminate();

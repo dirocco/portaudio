@@ -1,5 +1,5 @@
 /*
- * $Id: debug_sine.c,v 1.2 2003/02/02 01:48:28 darreng Exp $
+ * $Id: debug_sine.c,v 1.3 2003/04/29 02:25:14 darreng Exp $
  * debug_sine.c
  * Play a sine sweep using the Portable Audio api for several seconds.
  * Hacked test for debugging PA.
@@ -42,7 +42,7 @@
 #define NUM_SECONDS         (8)
 #define SLEEP_DUR           (800)
 #define SAMPLE_RATE         (44100)
-#define FRAMES_PER_BUFFER   (4096)
+#define FRAMES_PER_BUFFER   (256)
 
 #define MSEC_PER_BUFFER     (1000 * FRAMES_PER_BUFFER / SAMPLE_RATE)
 

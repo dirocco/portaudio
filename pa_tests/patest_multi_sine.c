@@ -1,5 +1,5 @@
 /*
- * $Id: patest_multi_sine.c,v 1.2 2003/02/13 18:30:41 darreng Exp $
+ * $Id: patest_multi_sine.c,v 1.3 2003/04/29 02:20:03 darreng Exp $
  * patest_multi_out.c
  * Play a different sine wave on each channels,
  * using the Portable Audio api.
@@ -125,6 +125,7 @@ int main(void)
     if( err != paNoError ) goto error;
 
     printf("Hit ENTER to stop sound.\n");
+    fflush(stdout);
     getchar();
 
     err = Pa_StopStream( stream );

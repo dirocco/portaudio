@@ -1,5 +1,5 @@
 /*
- * $Id: patest_mono.c,v 1.1 2003/02/13 18:27:32 darreng Exp $
+ * $Id: patest_mono.c,v 1.2 2003/04/29 02:20:15 darreng Exp $
  * patest_sine.c
  * Play a monophonic sine wave using the Portable Audio api for several seconds.
  *
@@ -40,7 +40,7 @@
 #include "portaudio.h"
 
 #define NUM_SECONDS   (10)
-#define SAMPLE_RATE   (11025)
+#define SAMPLE_RATE   (44100)
 #define AMPLITUDE     (0.8)
 #define FRAMES_PER_BUFFER  (64)
 #define OUTPUT_DEVICE Pa_GetDefaultOutputDeviceID()

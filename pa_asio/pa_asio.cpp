@@ -1,5 +1,5 @@
 /*
- * $Id: pa_asio.cpp,v 1.1 2003/01/15 06:10:13 gsilber Exp $
+ * $Id: pa_asio.cpp,v 1.2 2003/04/29 02:24:22 darreng Exp $
  * Portable Audio I/O Library for ASIO Drivers
  *
  * Author: Stephane Letz
@@ -29,7 +29,7 @@
  * CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
- 
+
 /* Modification History
 
         08-03-01 First version : Stephane Letz
@@ -57,8 +57,15 @@
         12-04-02 Add Mac includes for <Devices.h> and <Timer.h> : Phil Burk
         13-04-02 Removes another compiler warning : Stephane Letz
         30-04-02 Pa_ASIO_QueryDeviceInfo bug correction, memory allocation checking, better error handling : D Viens, P Burk, S Letz
-        
-        TO DO :
+        01-12-02 Fix Pa_GetDefaultInputDeviceID and Pa_GetDefaultOuputDeviceID result when no driver are available : S Letz
+        05-12-02 More debug messages : S Letz
+        01-23-03 Increased max channels to 128. Fixed comparison of (OutputChannels > kMaxInputChannels) : P Burk
+        02-17-03 Better termination handling : PaHost_CloseStream is called in PaHost_term is the the stream was not explicitely closed by the application : S Letz
+        04-02-03 More robust ASIO driver buffer size initialization : some buggy drivers (like the Hoontech DSP24) give incorrect [min, preferred, max] values
+       	   		 They should work with the preferred size value, thus if Pa_ASIO_CreateBuffers fails with the hostBufferSize computed in PaHost_CalcNumHostBuffers, 
+       	   		 we try again with the preferred size. Fix an old (never detected?) bug in the buffer adapdation code : S Letz
+       	   		 
+         TO DO :
         
         - Check Pa_StopSteam and Pa_AbortStream
         - Optimization for Input only or Ouput only (really necessary ??)
@@ -91,8 +98,8 @@
 enum {
         // number of input and outputs supported by the host application
         // you can change these to higher or lower values
-        kMaxInputChannels = 32,
-        kMaxOutputChannels = 32
+        kMaxInputChannels = 128,
+        kMaxOutputChannels = 128
 };
 
 /* ASIO specific device information. */
@@ -179,8 +186,8 @@ typedef struct PaHostSoundControl
 #define PRINT(x) { printf x; fflush(stdout); }
 #define ERR_RPT(x) PRINT(x)
 
-#define DBUG(x)   /* PRINT(x) */
-#define DBUGX(x)  /* PRINT(x) /**/
+#define DBUG(x)   /* PRINT(x)  */
+#define DBUGX(x)  /* PRINT(x)  */
 
 /* We are trying to be compatible with CARBON but this has not been thoroughly tested. */
 #define CARBON_COMPATIBLE  (0)
@@ -304,7 +311,7 @@ static bool Pa_ASIO_loadAsioDriver(char *name)
 static int PGCD (int a, int b) {return (b == 0) ? a : PGCD (b,a%b);}
 static int PPCM (int a, int b) {return (a*b) / PGCD (a,b);}
 
-// Takes the size of host buffer and user buffer : returns the number of frames needed for buffer alignement
+// Takes the size of host buffer and user buffer : returns the number of frames needed for buffer adaptation
 static int Pa_ASIO_CalcFrameShift (int M, int N)
 {
         int res = 0;
@@ -351,6 +358,26 @@ static PaSampleFormat Pa_ASIO_Convert_SampleFormat(ASIOSampleType type)
         }
 }
 
+
+
+//--------------------------------------------------------------------------------------------------------------------
+static void PaHost_CalcBufferOffset(internalPortAudioStream   *past)
+{
+	 if (asioDriverInfo.past_FramesPerHostBuffer > past->past_FramesPerUserBuffer){
+            // Computes the MINIMUM value of null frames shift for the output buffer alignement
+            asioDriverInfo.pahsc_OutputBufferOffset = Pa_ASIO_CalcFrameShift (asioDriverInfo.past_FramesPerHostBuffer,past->past_FramesPerUserBuffer);
+            asioDriverInfo.pahsc_InputBufferOffset = 0;
+            DBUG(("PaHost_CalcBufferOffset : Minimum BufferOffset for Output = %d\n", asioDriverInfo.pahsc_OutputBufferOffset));
+    }else{
+    
+            //Computes the MINIMUM value of null frames shift for the input buffer alignement
+            asioDriverInfo.pahsc_InputBufferOffset = Pa_ASIO_CalcFrameShift (asioDriverInfo.past_FramesPerHostBuffer,past->past_FramesPerUserBuffer);
+            asioDriverInfo.pahsc_OutputBufferOffset = 0;
+            DBUG(("PaHost_CalcBufferOffset : Minimum BufferOffset for Input = %d\n", asioDriverInfo.pahsc_InputBufferOffset));
+    }
+}
+
+//--------------------------------------------------------------------------------------------------------------------
 /* Allocate ASIO buffers, initialise channels */
 static ASIOError Pa_ASIO_CreateBuffers (PaHostSoundControl *asioDriverInfo, long InputChannels,
                                                                           long OutputChannels, long framesPerBuffer)
@@ -361,7 +388,7 @@ static ASIOError Pa_ASIO_CreateBuffers (PaHostSoundControl *asioDriverInfo, long
         ASIOBufferInfo *info = asioDriverInfo->bufferInfos;
         
         // Check parameters
-        if ((InputChannels > kMaxInputChannels) || (OutputChannels > kMaxInputChannels)) return ASE_InvalidParameter;
+        if ((InputChannels > kMaxInputChannels) || (OutputChannels > kMaxOutputChannels)) return ASE_InvalidParameter;
         
         for(i = 0; i < InputChannels; i++, info++){
                 info->isInput = ASIOTrue;
@@ -381,7 +408,9 @@ static ASIOError Pa_ASIO_CreateBuffers (PaHostSoundControl *asioDriverInfo, long
         asioDriverInfo->pahsc_asioCallbacks.asioMessage = &asioMessages;
         asioDriverInfo->pahsc_asioCallbacks.bufferSwitchTimeInfo = &bufferSwitchTimeInfo;
         
-        DBUG(("PortAudio : ASIOCreateBuffers with size = %ld \n", framesPerBuffer));
+        DBUG(("Pa_ASIO_CreateBuffers : ASIOCreateBuffers with inputChannels = %ld \n", InputChannels));
+        DBUG(("Pa_ASIO_CreateBuffers : ASIOCreateBuffers with OutputChannels = %ld \n", OutputChannels));
+        DBUG(("Pa_ASIO_CreateBuffers : ASIOCreateBuffers with size = %ld \n", framesPerBuffer));
      
         err =  ASIOCreateBuffers( asioDriverInfo->bufferInfos, InputChannels+OutputChannels,
                                   framesPerBuffer, &asioDriverInfo->pahsc_asioCallbacks);
@@ -398,10 +427,10 @@ static ASIOError Pa_ASIO_CreateBuffers (PaHostSoundControl *asioDriverInfo, long
 
         err = ASIOGetLatencies(&asioDriverInfo->pahsc_inputLatency, &asioDriverInfo->pahsc_outputLatency);
         
-        DBUG(("PortAudio : InputLatency = %ld latency = %ld msec \n", 
+        DBUG(("Pa_ASIO_CreateBuffers : InputLatency = %ld latency = %ld msec \n", 
                 asioDriverInfo->pahsc_inputLatency,  
                 (long)((asioDriverInfo->pahsc_inputLatency*1000)/ asioDriverInfo->past->past_SampleRate)));
-        DBUG(("PortAudio : OuputLatency = %ld latency = %ld msec \n", 
+        DBUG(("Pa_ASIO_CreateBuffers : OuputLatency = %ld latency = %ld msec \n", 
                 asioDriverInfo->pahsc_outputLatency,
                 (long)((asioDriverInfo->pahsc_outputLatency*1000)/ asioDriverInfo->past->past_SampleRate)));
         
@@ -453,7 +482,8 @@ static PaError Pa_ASIO_QueryDeviceInfo( internalPortAudioDevice * ipad )
 #elif WINDOWS
         numDrivers = asioDrivers->asioGetNumDev();
 #endif
-        DBUG(("PaASIO_QueryDeviceInfo: numDrivers = %d\n", numDrivers ));
+
+        DBUG(("PaASIO_QueryDeviceInfo: number of installed drivers = %d\n", numDrivers ));
 
         for (int driver = 0 ; driver < numDrivers ; driver++)
         {
@@ -462,67 +492,88 @@ static PaError Pa_ASIO_QueryDeviceInfo( internalPortAudioDevice * ipad )
                     asioDriverInfo.pahsc_driverInfo.asioVersion = 2; // FIXME - is this right? PLB
                     asioDriverInfo.pahsc_driverInfo.sysRef = GetDesktopWindow(); // FIXME - is this right? PLB
             #endif
+            
+            DBUG(("---------------------------------------\n"));
+            
+            DBUG(("PaASIO_QueryDeviceInfo: Driver name = %s\n", names[driver]));
   
             /* If the driver can be loaded : */
-            if ( !Pa_ASIO_loadAsioDriver(names[driver]) )
-			{
-				DBUG(("PaASIO_QueryDeviceInfo could not loadAsioDriver %s\n", names[driver]));
-			}
-			else if( (asioError = ASIOInit(&asioDriverInfo.pahsc_driverInfo)) != ASE_OK )
-			{
-				DBUG(("PaASIO_QueryDeviceInfo: ASIOInit returned %d for %s\n", asioError, names[driver]));
-			}
-			else if( (ASIOGetChannels(&InputChannels, &OutputChannels) != ASE_OK))
-			{
-				DBUG(("PaASIO_QueryDeviceInfo could not ASIOGetChannels for %s\n", names[driver]));
-			}
-			else
-			{
-		            /* Gets the name */
-                    dev = &(ipad[sNumDevices].pad_Info);
-                    dev->name = names[driver];
-                    names[driver] = 0;
+            if ( !Pa_ASIO_loadAsioDriver(names[driver]) ){
+                     DBUG(("PaASIO_QueryDeviceInfo could not loadAsioDriver %s\n", names[driver]));
+            } else {
+            
+                    DBUG(("PaASIO_QueryDeviceInfo: loadAsioDriver OK\n"));
                     
-                    /* Gets Input and Output channels number */
-                    dev->maxInputChannels = InputChannels;
-                    dev->maxOutputChannels = OutputChannels;
+                    if((asioError = ASIOInit(&asioDriverInfo.pahsc_driverInfo)) != ASE_OK){
                     
-                    DBUG(("PaASIO_QueryDeviceInfo: InputChannels = %d\n", InputChannels ));
-                    DBUG(("PaASIO_QueryDeviceInfo: OutputChannels = %d\n", OutputChannels ));
+                         DBUG(("PaASIO_QueryDeviceInfo: ASIOInit returned %d for %s\n", asioError, names[driver]));
+                         
+                    }else {
                     
-                    /* Make room in case device supports all rates. */
-                    sampleRates = (double*)PaHost_AllocateFastMemory(MAX_NUMSAMPLINGRATES * sizeof(double));
-                    /* check memory */
-                    if (!sampleRates) {
-                    	ASIOExit();
-                    	return paInsufficientMemory;
-                    }
-                    dev->sampleRates = sampleRates;
-                    dev->numSampleRates = 0;
-                    
-                    /* Loop through the possible sampling rates and check each to see if the device supports it. */
-                    for (int index = 0; index < MAX_NUMSAMPLINGRATES; index++) {
-                            if (ASIOCanSampleRate(possibleSampleRates[index]) != ASE_NoClock) {
-                                    DBUG(("PortAudio : possible sample rate = %d\n", (long)possibleSampleRates[index]));
-                                    dev->numSampleRates += 1;
-                                    *sampleRates = possibleSampleRates[index];
-                                    sampleRates++;
+                    	 DBUG(("PaASIO_QueryDeviceInfo: ASIOInit OK \n"));
+                    	 
+                    	 if(ASIOGetChannels(&InputChannels, &OutputChannels) != ASE_OK){
+                    	 
+                            DBUG(("PaASIO_QueryDeviceInfo could not ASIOGetChannels for %s\n", names[driver]));
+                            
+                         }else {
+                            
+                            DBUG(("PaASIO_QueryDeviceInfo: ASIOGetChannels OK \n"));
+                                
+                            /* Gets the name */
+                            dev = &(ipad[sNumDevices].pad_Info);
+                            dev->name = names[driver];
+                            names[driver] = 0;
+                            
+                            /* Gets Input and Output channels number */
+                            dev->maxInputChannels = InputChannels;
+                            dev->maxOutputChannels = OutputChannels;
+                            
+                            DBUG(("PaASIO_QueryDeviceInfo: InputChannels = %d\n", InputChannels ));
+                            DBUG(("PaASIO_QueryDeviceInfo: OutputChannels = %d\n", OutputChannels ));
+                            
+                            /* Make room in case device supports all rates. */
+                            sampleRates = (double*)PaHost_AllocateFastMemory(MAX_NUMSAMPLINGRATES * sizeof(double));
+                            /* check memory */
+                            if (!sampleRates) {
+                                ASIOExit();
+                                return paInsufficientMemory;
                             }
+                            dev->sampleRates = sampleRates;
+                            dev->numSampleRates = 0;
+                            
+                            /* Loop through the possible sampling rates and check each to see if the device supports it. */
+                            for (int index = 0; index < MAX_NUMSAMPLINGRATES; index++) {
+                                    if (ASIOCanSampleRate(possibleSampleRates[index]) != ASE_NoClock) {
+                                            DBUG(("PaASIO_QueryDeviceInfo: possible sample rate = %d\n", (long)possibleSampleRates[index]));
+                                            dev->numSampleRates += 1;
+                                            *sampleRates = possibleSampleRates[index];
+                                            sampleRates++;
+                                    }
+                            }
+                            
+                            /* We assume that all channels have the same SampleType, so check the first */
+                            channelInfos.channel = 0;
+                            channelInfos.isInput = 1;
+                           
+                            if ((asioError = ASIOGetChannelInfo(&channelInfos)) == ASE_NotPresent) {
+                            	DBUG(("PaASIO_QueryDeviceInfo: ASIOGetChannelInfo returned %d \n",asioError)); 
+                            }
+                            
+                            dev->nativeSampleFormats = Pa_ASIO_Convert_SampleFormat(channelInfos.type);
+                            
+                            /* unload the driver */
+                            if ((asioError = ASIOExit()) != ASE_OK) {
+                            	DBUG(("PaASIO_QueryDeviceInfo: ASIOExit returned %d \n",asioError)); 
+                            }
+                            
+                            sNumDevices++;
+                        }
+		                   
                     }
+               }
+        }
                     
-                    /* We assume that all channels have the same SampleType, so check the first */
-                    channelInfos.channel = 0;
-                    channelInfos.isInput = 1;
-                    ASIOGetChannelInfo(&channelInfos);
-                    
-                    dev->nativeSampleFormats = Pa_ASIO_Convert_SampleFormat(channelInfos.type);
-                    
-                    /* unload the driver */
-                    ASIOExit();
-                    sNumDevices++;
-                }
-        }       
-        
         /* free only unused names */
         for (i = 0 ; i < PA_MAX_DEVICE_INFO ; i++) if (names[i]) PaHost_FreeFastMemory(names[i],32);
         
@@ -531,7 +582,7 @@ static PaError Pa_ASIO_QueryDeviceInfo( internalPortAudioDevice * ipad )
 
 //----------------------------------------------------------------------------------
 // TAKEN FROM THE ASIO SDK: 
-static void sampleRateChanged(ASIOSampleRate sRate)
+void sampleRateChanged(ASIOSampleRate sRate)
 {
         // do whatever you need to do if the sample rate changed
         // usually this only happens during external sync.
@@ -1666,17 +1717,25 @@ static void Pa_ASIO_Adaptor_Init()
 		asioDriverInfo.pahsc_hostOutputBufferFrameOffset = asioDriverInfo.pahsc_OutputBufferOffset;
 		asioDriverInfo.pahsc_userInputBufferFrameOffset = 0; // empty 
 		asioDriverInfo.pahsc_userOutputBufferFrameOffset = asioDriverInfo.past->past_FramesPerUserBuffer; // empty 
+		DBUG(("Pa_ASIO_Adaptor_Init : shift output\n"));
+		DBUG(("Pa_ASIO_Adaptor_Init : userInputBufferFrameOffset %d\n",asioDriverInfo.pahsc_userInputBufferFrameOffset));
+		DBUG(("Pa_ASIO_Adaptor_Init : userOutputBufferFrameOffset %d\n",asioDriverInfo.pahsc_userOutputBufferFrameOffset));
+		DBUG(("Pa_ASIO_Adaptor_Init : hostOutputBufferFrameOffset %d\n",asioDriverInfo.pahsc_hostOutputBufferFrameOffset));
+
 	}else {
 		asioDriverInfo.pahsc_hostOutputBufferFrameOffset = 0; // empty 
 		asioDriverInfo.pahsc_userInputBufferFrameOffset = asioDriverInfo.pahsc_InputBufferOffset;
 		asioDriverInfo.pahsc_userOutputBufferFrameOffset = asioDriverInfo.past->past_FramesPerUserBuffer;	// empty 
+		DBUG(("Pa_ASIO_Adaptor_Init : shift input\n"));
+		DBUG(("Pa_ASIO_Adaptor_Init : userInputBufferFrameOffset %d\n",asioDriverInfo.pahsc_userInputBufferFrameOffset));
+		DBUG(("Pa_ASIO_Adaptor_Init : userOutputBufferFrameOffset %d\n",asioDriverInfo.pahsc_userOutputBufferFrameOffset));
+		DBUG(("Pa_ASIO_Adaptor_Init : hostOutputBufferFrameOffset %d\n",asioDriverInfo.pahsc_hostOutputBufferFrameOffset));
 	}
 }
 
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------
 // FIXME : optimization for Input only or output only modes (really necessary ??)
-static void Pa_ASIO_Callback_Input( long index)
+static void Pa_ASIO_Callback_Input(long index)
 {
         internalPortAudioStream  *past = asioDriverInfo.past;
         long framesInputHostBuffer = asioDriverInfo.past_FramesPerHostBuffer; // number of frames available into the host input buffer
@@ -1687,14 +1746,14 @@ static void Pa_ASIO_Callback_Input( long index)
         long tmp;
         
          /* Fill host ASIO output with remaining frames in user output */
-        framesOutputHostBuffer = asioDriverInfo.past_FramesPerHostBuffer;
+       	framesOutputHostBuffer = asioDriverInfo.past_FramesPerHostBuffer - asioDriverInfo.pahsc_hostOutputBufferFrameOffset;
         framesOuputUserBuffer = asioDriverInfo.past->past_FramesPerUserBuffer - asioDriverInfo.pahsc_userOutputBufferFrameOffset;
         tmp = min(framesOutputHostBuffer, framesOuputUserBuffer);
         framesOutputHostBuffer -= tmp;
         Pa_ASIO_Callback_Output(index,tmp);
         
         /* Available frames in hostInputBuffer */
-        while (framesInputHostBuffer  > 0) {
+        while (framesInputHostBuffer > 0) {
                 
                 /* Number of frames needed to complete an user input buffer */
                 framesInputUserBuffer = asioDriverInfo.past->past_FramesPerUserBuffer - asioDriverInfo.pahsc_userInputBufferFrameOffset;
@@ -2465,7 +2524,6 @@ static int GetFirstPossibleDivisor(long max, long val )
 //------------------------------------------------------------------------
 static int IsPowerOfTwo( unsigned long n ) { return ((n & (n-1)) == 0); }
 
-
 /*******************************************************************
 * Determine size of native ASIO audio buffer size
 * Input parameters : FramesPerUserBuffer, NumUserBuffers 
@@ -2519,26 +2577,12 @@ static PaError PaHost_CalcNumHostBuffers( internalPortAudioStream *past )
         }
         
         DBUG(("----------------------------------\n"));
-        DBUG(("PortAudio : minSize = %ld \n",asioDriverInfo.pahsc_minSize));
-        DBUG(("PortAudio : preferredSize = %ld \n",asioDriverInfo.pahsc_preferredSize));
-        DBUG(("PortAudio : maxSize = %ld \n",asioDriverInfo.pahsc_maxSize));
-        DBUG(("PortAudio : granularity = %ld \n",asioDriverInfo.pahsc_granularity));
-        DBUG(("PortAudio : User buffer size = %d\n", asioDriverInfo.past->past_FramesPerUserBuffer ));
-        DBUG(("PortAudio : ASIO buffer size = %d\n", asioDriverInfo.past_FramesPerHostBuffer ));
-        
-        if (asioDriverInfo.past_FramesPerHostBuffer > past->past_FramesPerUserBuffer){
-        
-                // Computes the MINIMUM value of null frames shift for the output buffer alignement
-                asioDriverInfo.pahsc_OutputBufferOffset = Pa_ASIO_CalcFrameShift (asioDriverInfo.past_FramesPerHostBuffer,past->past_FramesPerUserBuffer);
-                asioDriverInfo.pahsc_InputBufferOffset = 0;
-                DBUG(("PortAudio : Minimum BufferOffset for Output = %d\n", asioDriverInfo.pahsc_OutputBufferOffset));
-        }else{
-        
-                //Computes the MINIMUM value of null frames shift for the input buffer alignement
-                asioDriverInfo.pahsc_InputBufferOffset = Pa_ASIO_CalcFrameShift (asioDriverInfo.past_FramesPerHostBuffer,past->past_FramesPerUserBuffer);
-                asioDriverInfo.pahsc_OutputBufferOffset = 0;
-                DBUG(("PortAudio : Minimum BufferOffset for Input = %d\n", asioDriverInfo.pahsc_InputBufferOffset));
-        }
+        DBUG(("PaHost_CalcNumHostBuffers : minSize = %ld \n",asioDriverInfo.pahsc_minSize));
+        DBUG(("PaHost_CalcNumHostBuffers : preferredSize = %ld \n",asioDriverInfo.pahsc_preferredSize));
+        DBUG(("PaHost_CalcNumHostBuffers : maxSize = %ld \n",asioDriverInfo.pahsc_maxSize));
+        DBUG(("PaHost_CalcNumHostBuffers : granularity = %ld \n",asioDriverInfo.pahsc_granularity));
+        DBUG(("PaHost_CalcNumHostBuffers : User buffer size = %d\n", asioDriverInfo.past->past_FramesPerUserBuffer ));
+        DBUG(("PaHost_CalcNumHostBuffers : ASIO buffer size = %d\n", asioDriverInfo.past_FramesPerHostBuffer ));
         
         return paNoError;
 }
@@ -2590,18 +2634,16 @@ PaError PaHost_Term( void )
 	                dev->sampleRates = NULL;
 	               if(dev->name != NULL) PaHost_FreeFastMemory((void *) dev->name, 32);
 	                dev->name = NULL;
-	                
 	        }
 	        
 	        sNumDevices = 0;
-	        
-	         /* Dispose : if not done by Pa_CloseStream	*/
-	        if(ASIODisposeBuffers() != ASE_OK) result = paHostError;        
-	        if(ASIOExit() != ASE_OK) result = paHostError;
-	        
+                
+            /* If the stream has been closed with PaHost_CloseStream, asioDriverInfo.past == null, otherwise close it now */
+	        if(asioDriverInfo.past != NULL) Pa_CloseStream(asioDriverInfo.past);
+	          
 	        /* remove the loaded ASIO driver */
 	        asioDrivers->removeCurrentDriver();
-	    }
+        }
 
         return result;
 }
@@ -2668,8 +2710,36 @@ PaError PaHost_OpenStream( internalPortAudioStream   *past )
                 asioDriverInfo.pahsc_NumInputChannels,
                 asioDriverInfo.pahsc_NumOutputChannels,
                 asioDriverInfo.past_FramesPerHostBuffer);
-    
-        if (err == ASE_OK)
+                
+       	
+       	/* 
+       		Some buggy drivers (like the Hoontech DSP24) give incorrect [min, preferred, max] values
+       	   	They should work with the preferred size value, thus if Pa_ASIO_CreateBuffers fails with 
+       	   	the hostBufferSize computed in PaHost_CalcNumHostBuffers, we try again with the preferred size. 
+       	*/ 
+      	
+       	if (err != ASE_OK) {
+       
+        	DBUG(("PaHost_OpenStream : Pa_ASIO_CreateBuffers failed with the requested framesPerBuffer = %ld \n", asioDriverInfo.past_FramesPerHostBuffer));
+        	
+            err = Pa_ASIO_CreateBuffers(&asioDriverInfo,
+                	asioDriverInfo.pahsc_NumInputChannels,
+                	asioDriverInfo.pahsc_NumOutputChannels,
+                	asioDriverInfo.pahsc_preferredSize);
+                                  
+            if (err == ASE_OK) {
+            	// Adjust FramesPerHostBuffer to take the preferredSize instead of the value computed in PaHost_CalcNumHostBuffers
+            	asioDriverInfo.past_FramesPerHostBuffer = asioDriverInfo.pahsc_preferredSize;
+            	DBUG(("PaHost_OpenStream : Adjust FramesPerHostBuffer to take the preferredSize instead of the value computed in PaHost_CalcNumHostBuffers\n"));
+            } else {
+            	DBUG(("PaHost_OpenStream : Pa_ASIO_CreateBuffers failed with the preferred framesPerBuffer = %ld \n", asioDriverInfo.pahsc_preferredSize));
+            }
+       	}
+       	
+       	/* Compute buffer adapdation offset */
+       	PaHost_CalcBufferOffset(past);
+     
+        if (err == ASE_OK) 
                 return paNoError;
         else if (err == ASE_NoMemory) 
                 result = paInsufficientMemory;
@@ -2681,8 +2751,8 @@ PaError PaHost_OpenStream( internalPortAudioStream   *past )
                 result = paHostError;
                 
 error:
-                ASIOExit();
-                return result;
+        ASIOExit();
+        return result;
 
 }
 
@@ -2700,13 +2770,13 @@ PaError PaHost_CloseStream( internalPortAudioStream   *past )
          AddTraceMessage( "PaHost_CloseStream: pahsc_HWaveOut ", (int) pahsc->pahsc_HWaveOut );
         #endif
         
-        /* Dispose */
-        if(ASIODisposeBuffers() != ASE_OK) result = paHostError;        
-        if(ASIOExit() != ASE_OK) result = paHostError;
-        
         /* Free data and device for output. */
         past->past_DeviceData = NULL;
         asioDriverInfo.past = NULL;
+        
+        /* Dispose */
+        if(ASIODisposeBuffers() != ASE_OK) result = paHostError;        
+        if(ASIOExit() != ASE_OK) result = paHostError;
                 
         return result;
 }
@@ -2873,13 +2943,13 @@ const PaDeviceInfo* Pa_GetDeviceInfo( PaDeviceID id )
 /*************************************************************************/
 PaDeviceID Pa_GetDefaultInputDeviceID( void )
 {
-        return sDefaultInputDeviceID;
+        return (sNumDevices > 0) ? sDefaultInputDeviceID : paNoDevice;
 }
 
 /*************************************************************************/
 PaDeviceID Pa_GetDefaultOutputDeviceID( void )
 {
-        return sDefaultOutputDeviceID;
+		return (sNumDevices > 0) ? sDefaultOutputDeviceID : paNoDevice;
 }
 
 /*************************************************************************/
@@ -2993,6 +3063,10 @@ static void Pa_EndUsageCalculation( internalPortAudioStream   *past )
 
 #endif
 
+
+
+
+ 
 
 
 

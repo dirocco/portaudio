@@ -1,5 +1,5 @@
 /*
- * $Id: debug_record.c,v 1.2 2003/02/13 18:29:06 darreng Exp $
+ * $Id: debug_record.c,v 1.3 2003/04/29 02:25:23 darreng Exp $
  * patest_record.c
  * Record input into an array.
  * Save array to a file.
@@ -39,7 +39,7 @@
 #include <stdlib.h>
 #include "portaudio.h"
 
-#define SAMPLE_RATE      (22050)
+#define SAMPLE_RATE      (44100)
 #define NUM_SECONDS          (6)
 #define NUM_CHANNELS         (2)
 #define FRAMES_PER_BUFFER   (64)

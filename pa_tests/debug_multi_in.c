@@ -1,5 +1,5 @@
 /*
- * $Id: debug_multi_in.c,v 1.1 2003/01/15 06:10:14 gsilber Exp $
+ * $Id: debug_multi_in.c,v 1.2 2003/04/29 02:25:44 darreng Exp $
  * debug_multi_in.c
  * Pass output from each of multiple channels
  * to a stereo output using the Portable Audio api.
@@ -42,9 +42,10 @@
 //#define INPUT_DEVICE_NAME   ("EWS88 MT Interleaved Rec")
 #define OUTPUT_DEVICE       (Pa_GetDefaultOutputDeviceID())
 //#define OUTPUT_DEVICE       (18)
-#define SAMPLE_RATE         (22050)
+#define SAMPLE_RATE         (44100)
 #define FRAMES_PER_BUFFER   (256)
 #define MIN_LATENCY_MSEC    (400)
+#define MAX_INPUT_CHANNELS  (9999)
 #define NUM_BUFFERS         ((MIN_LATENCY_MSEC * SAMPLE_RATE) / (FRAMES_PER_BUFFER * 1000))
 #ifndef M_PI
 #define M_PI  (3.14159265)
@@ -67,14 +68,13 @@ static int patestCallback( void *inputBuffer, void *outputBuffer,
     float *out = (float*)outputBuffer;
     float *in = (float*)inputBuffer;
     int i;
-    int finished = 0;
     (void) outTime; /* Prevent unused variable warnings. */
     (void) inputBuffer;
 
     if( in == NULL ) return 0;
     for( i=0; i<(int)framesPerBuffer; i++ )
     {
-        /* Copy one channel of input to output. */
+        /* Copy one channel of input to stereo output. */
         *out++ = in[data->liveChannel];
         *out++ = in[data->liveChannel];
         in += data->numChannels;
@@ -133,13 +133,21 @@ int main(void)
         printf("Could not get device info!\n");
         goto error;
     }
-    data.numChannels = pdi->maxInputChannels;
     printf("Input Device name is %s\n", pdi->name );
     printf("Input Device has %d channels.\n", pdi->maxInputChannels);
+    if( pdi->maxInputChannels <= MAX_INPUT_CHANNELS )
+    {
+        data.numChannels = pdi->maxInputChannels;
+    }
+    else
+    {
+        data.numChannels = MAX_INPUT_CHANNELS;
+        printf("Only use %d channels.\n", MAX_INPUT_CHANNELS );
+    }
     err = Pa_OpenStream(
               &stream,
               inputDevice,
-              pdi->maxInputChannels,
+              data.numChannels,
               paFloat32,  /* 32 bit floating point input */
               NULL,
               OUTPUT_DEVICE,
