@@ -71,7 +71,7 @@ case "${host_os}" in
         PLAT_DIR="pa_unix_oss/"
 	CORE_SRC="pa_unix_oss.c";
         LIBS="-lm -lpthread";
-        PADLL="libportaudio.0.0.18.so";
+        PADLL="libportaudio.so.0.0.18";
         SHARED_FLAGS="-shared";
 esac
 
