@@ -11,6 +11,6 @@ SUBDIRS=pa_tests
 #the path to the directory which contains configure for this directory
 CONFIGROOT=.
 
-#includes for a configure root
+#includes for a configure parent
 include ../make-includes/config.make.inc
-include ../make-includes/config.root.make.inc
+include ../make-includes/config.parent.make.inc
