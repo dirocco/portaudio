@@ -29,6 +29,14 @@ if [[ "$buildwithstatic" = "yes" ]] ; then
 else
 	AC_MSG_RESULT([Setting builds to use shared libraries]);
 fi
+
+AC_ARG_ENABLE([vstudio],[  --enable-vstudio        Complile using MS Visual Studio for debugging (Default=NO)],
+	buildwithvstudio=$enableval,buildwithvstudio=no)
+if [[ "$buildwithvstudio" = "yes" ]] ; then
+	AC_MSG_RESULT([Setting builds with Visual Studio]);
+else
+	AC_MSG_RESULT([Setting builds with default compiler]);
+fi
 	
 AC_ARG_WITH([toolroot],[  --with-toolroot[=DIR]   Use DIR as the root for all tools],ac_toolroot=$withval,ac_toolroot=[])
 
