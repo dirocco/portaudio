@@ -55,7 +55,6 @@ clean:
 	echo No Intermediate files
 
 distclean: clean
-	rm -f Makefile
 	rm -f $(TESTS) 
 
 %.o: %.c Makefile 
