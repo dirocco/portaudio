@@ -21,7 +21,8 @@ INSTALL = @INSTALL@
 SHARED_FLAGS = @SHARED_FLAGS@
 DLL_LIBS = @DLL_LIBS@
 
-OTHER_OBJS = @OTHER_OBJS@
+PLAT_DIR = @PLAT_DIR@
+CORE_SRC = $(PLAT_DIR)@CORE_SRC@
 
 PALIB = libportaudio.a
 PADLL = @PADLL@
@@ -60,7 +61,7 @@ TESTS = \
 	bin/patest_underflow \
 	bin/patest_wire
 
-OBJS = $(COMMON_OBJS) $(OTHER_OBJS)
+OBJS = $(COMMON_OBJS) $(PLAT_DIR)pa_core.o
 
 all: ../../lib/$(PALIB) ../../lib/$(PADLLV) tests $(GLOBAL_INCLUDES)
 
@@ -85,6 +86,9 @@ distclean: clean
 	rm -f Makefile
 	rm -f $(TESTS) 
 	rm -f ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
+
+$(PLAT_DIR)pa_core.o: $(CORE_SRC) Makefile $(PAINC)
+	$(CC) -c $(CFLAGS) $< -o $@
 
 %.o: %.c Makefile $(PAINC)
 	$(CC) -c $(CFLAGS) $< -o $@

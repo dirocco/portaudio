@@ -22,7 +22,8 @@ if [[ $AR = "no" ]] ; then
 fi
 
 dnl Extra variables we want to substitue
-AC_SUBST(OTHER_OBJS)
+AC_SUBST(CORE_SRC)
+AC_SUBST(PLAT_DIR)
 AC_SUBST(PADLL)
 AC_SUBST(SHARED_FLAGS)
 AC_SUBST(DLL_LIBS)
@@ -32,8 +33,8 @@ dnl Determine the host operating system / platform
 case "${host_os}" in
   darwin* )
         dnl Mac OS X configuration
-
-        OTHER_OBJS="pa_mac_core/pa_mac_core.o";
+	PLAT_DIR="pa_mac_core/"
+        CORE_SRC="pa_mac_core.c";
         LIBS="-framework CoreAudio -lm";
         PADLL="libportaudio.dylib.0.0.18";
         SHARED_FLAGS="-framework CoreAudio -dynamiclib";
@@ -41,8 +42,8 @@ case "${host_os}" in
 
   mingw* )
         dnl MingW configuration
-
-        OTHER_OBJS="pa_win_wmme/pa_win_wmme.o";
+	PLAT_DIR="pa_win_wmme/"
+        CORE_SRC="pa_win_wmme.c";
         LIBS="-lwinmm -lm";
         PADLL="portaudio.dll";
         SHARED_FLAGS="-shared -mthreads";
@@ -52,7 +53,8 @@ case "${host_os}" in
   cygwin* )
         dnl Cygwin configuration
 
-        OTHER_OBJS="pa_win_wmme/pa_win_wmme.o";
+	PLAT_DIR="pa_win_wmme/"
+        CORE_SRC="pa_win_wmme.c";
         LIBS="-lwinmm -lm";
         PADLL="portaudio.dll";
         SHARED_FLAGS="-shared -mthreads";
@@ -62,11 +64,12 @@ case "${host_os}" in
   *)
         dnl Unix OSS configuration
 
-   AC_CHECK_LIB(pthread, pthread_create,
+   	AC_CHECK_LIB(pthread, pthread_create,
                 ,
-                AC_MSG_ERROR([libpthread not found!]))
+        AC_MSG_ERROR([libpthread not found!]))
 
-        OTHER_OBJS="pa_unix_oss/pa_unix_oss.o";
+        PLAT_DIR="pa_unix_oss/"
+	CORE_SRC="pa_unix_oss.c";
         LIBS="-lm -lpthread";
         PADLL="libportaudio.0.0.18.so";
         SHARED_FLAGS="-shared";
