@@ -1,5 +1,5 @@
 #
-# PortAudio pa_tests Makefile.in
+# Pablio Makefile.in
 #
 # By: H. Gregory Silber
 #
@@ -11,51 +11,58 @@
 
 PREFIX = @prefix@
 CC = @CC@
-CFLAGS = @CFLAGS@ -I../pa_common
-LIBS = -lportaudio @LIBS@
+CFLAGS = @CFLAGS@ -I. -I../../../include 
+LIBS = -lpablio @LIBS@ 
 AR = @AR@
 RANLIB = @RANLIB@
 INSTALL = @INSTALL@
 SHARED_FLAGS = @SHARED_FLAGS@
 DLL_LIBS = @DLL_LIBS@
 
-TESTS = \
-	../bin/patest_buffer \
-	../bin/patest_clip \
-	../bin/patest_dither \
-	../bin/patest_hang \
-	../bin/patest_latency \
-	../bin/patest_leftright \
-	../bin/patest_longsine \
-	../bin/patest_many \
-	../bin/patest_maxsines \
-	../bin/patest_multi_sine \
-	../bin/patest_pink \
-	../bin/patest_record \
-	../bin/patest_ringmix \
-	../bin/patest_saw \
-	../bin/patest_sine8 \
-	../bin/patest_sine \
-	../bin/patest_sine_formats \
-	../bin/patest_sine_time \
-	../bin/patest_stop \
-	../bin/patest_sync \
-	../bin/patest_toomanysines \
-	../bin/patest_underflow \
-	../bin/patest_wire
 
-all: tests
+SOURCES = \
+	patest_buffer.c \
+	patest_clip.c \
+	patest_dither.c \
+	patest_hang.c \
+	patest_latency.c \
+	patest_leftright.c \
+	patest_longsine.c \
+	patest_many.c \
+	patest_maxsines.c \
+	patest_multi_sine.c \
+	patest_pink.c \
+	patest_record.c \
+	patest_ringmix.c \
+	patest_saw.c \
+	patest_sine8.c \
+	patest_sine.c \
+	patest_sine_formats.c \
+	patest_sine_time.c \
+	patest_stop.c \
+	patest_sync.c \
+	patest_toomanysines.c \
+	patest_underflow.c \
+	patest_wire.c \
+	test_rw.c \
+	test_rw_echo.c \
+	test_w_saw8.c \
+	test_w_saw.c \
+	passthru.c \
+	sine.c
 
-tests: $(TESTS)
+EXECS = $(SOURCES:%.c=../bin/%@EXEEXT@)
 
-$(TESTS): ../bin/%: Makefile %.c
+all: $(EXECS)
+
+$(EXECS): ../bin/%@EXEEXT@: Makefile %.c
 	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS)
 
 clean:
-	echo No Intermediate files
+	echo No intermediate files here 
 
 distclean: clean
-	rm -f $(TESTS) 
+	cd ../bin;$(RM) -f $(EXECS);cd ../tests
 
-%.o: %.c Makefile 
+%.@OBJEXT@: %.c Makefile $(PAINC)
 	$(CC) -c $(CFLAGS) $< -o $@
