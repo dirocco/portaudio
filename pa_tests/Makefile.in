@@ -12,7 +12,7 @@
 PREFIX = @prefix@
 CC = @CC@
 CFLAGS = @CFLAGS@ -I. -I../../../include 
-LIBS = -lpablio @LIBS@ 
+LIBS = -lportaudio @LIBS@ 
 AR = @AR@
 RANLIB = @RANLIB@
 INSTALL = @INSTALL@

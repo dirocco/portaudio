@@ -38,7 +38,7 @@ GLOBAL_INCLUDES = \
 
 OBJS = $(COMMON_OBJS) $(PLAT_DIR)pa_core.o
 
-all: libs tests $(GLOBAL_INCLUDES)
+all: $(GLOBAL_INCLUDES) libs tests
 
 tests: 
 	$(MAKE) -C pa_tests
