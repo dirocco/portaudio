@@ -75,11 +75,9 @@ case "${host_os}" in
         SHARED_FLAGS="-shared";
 esac
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([Makefile pa_tests/Makefile])
 
 echo ""
-echo "Finished configure."
+echo "Finished configure for module PortAudio."
 
 echo ""
-echo "Type 'make' to build PortAudio and examples."
-
