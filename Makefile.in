@@ -25,7 +25,7 @@ OTHER_OBJS = @OTHER_OBJS@
 
 PALIB = libportaudio.a
 PADLL = @PADLL@
-PADLLV = $(PADLL).0.0.18
+PADLLV = $(PADLL)
 PAINC = pa_common/portaudio.h
 
 COMMON_OBJS = \
