@@ -31,7 +31,6 @@ SOURCES = \
 	patest_clip.c \
 	patest_dither.c \
 	patest_hang.c \
-	patest_latency.c \
 	patest_leftright.c \
 	patest_longsine.c \
 	patest_many.c \
@@ -49,6 +48,9 @@ SOURCES = \
 	patest_toomanysines.c \
 	patest_underflow.c \
 	patest_wire.c \
+
+# removed since it doesn't work as expected on MacOSX
+#	patest_latency.c \
 
 # This test is generates warnings
 #	patest_record.c \
