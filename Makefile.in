@@ -1,0 +1,93 @@
+#
+# PortAudio Makefile.in
+#
+# Dominic Mazzoni
+#
+# Modified By: H. Gregory Silber
+#
+# WARNING: MODIFY THIS FILE AT YOUR OWN RISK.  THIS FILE SOON TO BE REMOVED
+# 	AND REPLACED WITH AUTO GENERATED FILES USING AUTOMAKE
+#	IF YOU MUST MODIFY THIS FILE, PLEASE NOTE YOUR CHANGES IN DETAIL
+#	DIRECTLY BENEATH THIS MESSAGE
+#
+
+PREFIX = @prefix@
+CC = @CC@
+CFLAGS = @CFLAGS@ -Ipa_common
+LIBS = @LIBS@
+AR = @AR@
+RANLIB = @RANLIB@
+INSTALL = @INSTALL@
+SHARED_FLAGS = @SHARED_FLAGS@
+DLL_LIBS = @DLL_LIBS@
+
+OTHER_OBJS = @OTHER_OBJS@
+
+PALIB = libportaudio.a
+PADLL = @PADLL@
+PADLLV = $(PADLL).0.0.18
+PAINC = pa_common/portaudio.h
+
+COMMON_OBJS = \
+	pa_common/pa_convert.o \
+	pa_common/pa_lib.o
+
+GLOBAL_INCLUDES = \
+	../../include/portaudio.h 
+
+TESTS = \
+	bin/patest_buffer \
+	bin/patest_clip \
+	bin/patest_dither \
+	bin/patest_hang \
+	bin/patest_latency \
+	bin/patest_leftright \
+	bin/patest_longsine \
+	bin/patest_many \
+	bin/patest_maxsines \
+	bin/patest_multi_sine \
+	bin/patest_pink \
+	bin/patest_record \
+	bin/patest_ringmix \
+	bin/patest_saw \
+	bin/patest_sine8 \
+	bin/patest_sine \
+	bin/patest_sine_formats \
+	bin/patest_sine_time \
+	bin/patest_stop \
+	bin/patest_sync \
+	bin/patest_toomanysines \
+	bin/patest_underflow \
+	bin/patest_wire
+
+OBJS = $(COMMON_OBJS) $(OTHER_OBJS)
+
+all: ../../lib/$(PALIB) ../../lib/$(PADLLV) tests $(GLOBAL_INCLUDES)
+
+tests: bin/ $(TESTS)
+
+libs: ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
+
+../../lib/$(PALIB): ../../lib/ $(OBJS) Makefile $(PAINC)
+	$(AR) ruv ../../lib/$(PALIB) $(OBJS)
+	$(RANLIB) ../../lib/$(PALIB)
+
+../../lib/$(PADLLV): ../../lib/ $(OBJS) Makefile $(PAINC)
+	$(CC) $(SHARED_FLAGS) -o ../../lib/$(PADLLV) $(OBJS) $(DLL_LIBS)
+
+$(TESTS): bin/%: ../../lib/$(PALIB) Makefile $(PAINC) pa_tests/%.c
+	$(CC) -o $@ $(CFLAGS) pa_tests/$*.c ../../lib/$(PALIB) $(LIBS)
+
+clean:
+	rm -f $(OBJS) 
+
+distclean: clean
+	rm -f Makefile
+	rm -f bin/*
+	rm -f ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
+
+%.o: %.c Makefile $(PAINC)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+$(GLOBAL_INCLUDES) : ../../include/% : pa_common/%
+	cp -f pa_common/$(@F) ../../include/$(@F)

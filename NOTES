@@ -1,0 +1,18 @@
+NOTES:
+
+1/14/03: this is a clean distribution.  To build:
+	bootstrap
+	./configure
+	make
+
+	to remove the configure script and associated files type:
+	bootstrap --clean
+
+	to return the distribution to a clean state type:
+	make distclean
+
+	to remove intermediate files type:
+	make clean
+	
+	make installs the libs in the $(PREFIX)/lib directory and the 
+		necessary includes in $(PREFIX)/include
