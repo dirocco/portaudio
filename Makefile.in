@@ -28,6 +28,7 @@ LOCALDLINK=@LOCALDLINK@
 
 PLAT_DIR = @PLAT_DIR@
 CORE_SRC = $(PLAT_DIR)@CORE_SRC@
+OTHER_OBJS = @OTHER_OBJS@
 
 BASEFILENAME = portaudio
 PALIB = lib$(BASEFILENAME).a
@@ -42,7 +43,7 @@ COMMON_OBJS = \
 GLOBAL_INCLUDES = \
 	../../include/portaudio.h 
 
-OBJS = $(COMMON_OBJS) $(PLAT_DIR)pa_core.o
+OBJS = $(COMMON_OBJS) $(PLAT_DIR)pa_core.o $(OTHER_OBJS)
 
 all: $(GLOBAL_INCLUDES) libs tests
 

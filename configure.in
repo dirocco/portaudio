@@ -43,6 +43,7 @@ AC_ARG_WITH([toolroot],[  --with-toolroot[=DIR]   Use DIR as the root for all to
 
 dnl Extra variables we want to substitue
 AC_SUBST(CORE_SRC)
+AC_SUBST(OTHER_OBJS)
 AC_SUBST(PLAT_DIR)
 AC_SUBST(PADLL)
 AC_SUBST(SHARED_FLAGS)
@@ -66,6 +67,7 @@ case "${host_os}" in
         dnl Mac OS X configuration
 	PLAT_DIR="pa_mac_core/"
         CORE_SRC="pa_mac_core.c";
+	OTHER_OBJS="../pablio/ringbuffer.o"
         LIBS="-framework CoreAudio -framework AudioToolbox -lm";
         PADLL="libportaudio.dylib.0.0.18";
         SHARED_FLAGS="-framework CoreAudio -framework AudioToolbox -dynamiclib";
