@@ -12,6 +12,8 @@
 PREFIX = @prefix@
 CC = @CC@
 CFLAGS = @CFLAGS@ -I. -I../../../include 
+CPPFLAGS=@CPPFLAGS@
+LDFLAGS=@LDFLAGS@
 LIBS = -lportaudio @LIBS@ 
 AR = @AR@
 RANLIB = @RANLIB@
@@ -50,7 +52,7 @@ EXECS = $(SOURCES:%.c=../bin/%@EXEEXT@)
 all: $(EXECS)
 
 $(EXECS): ../bin/%@EXEEXT@: Makefile %.c
-	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS) $(LDFLAGS)
 
 clean:
 	echo No intermediate files here 

@@ -24,7 +24,8 @@ DLL_LIBS = @DLL_LIBS@
 PLAT_DIR = @PLAT_DIR@
 CORE_SRC = $(PLAT_DIR)@CORE_SRC@
 
-PALIB = libportaudio.a
+BASEFILENAME = portaudio
+PALIB = lib$(BASEFILENAME).a
 PADLL = @PADLL@
 PADLLV = $(PADLL)
 PAINC = pa_common/portaudio.h
@@ -43,7 +44,21 @@ all: $(GLOBAL_INCLUDES) libs tests
 tests: 
 	$(MAKE) -C pa_tests
 
-libs: ../../lib/$(PALIB) ../../lib/$(PADLLV)
+libs: @STATIC_LIB_CONDITIONAL@ @SHARED_LIB_CONDITIONAL@
+	#
+
+builddll:../../lib/$(PADLLV) $(BASEFILENAME).def ../../lib/$(PADLLV).a 
+	#
+
+$(BASEFILENAME).def:$(OBJS)
+	dlltool --export-all-symbols -z $(BASEFILENAME).def $(OBJS)
+
+../../lib/$(PADLLV).a:$(BASEFILENAME).def
+	dlltool --def $(BASEFILENAME).def --dllname $(PADLLV) --output-lib ../../lib/$(PADLLV).a
+
+buildsharedlib:../../lib/$(PADLLV)
+
+buildstaticlib:../../lib/$(PALIB)
 
 ../../lib/$(PALIB): $(OBJS) Makefile $(PAINC)
 	$(AR) ruv ../../lib/$(PALIB) $(OBJS)
@@ -59,6 +74,7 @@ clean:
 distclean: clean
 	$(MAKE) -C pa_tests distclean
 	rm -f ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
+	rm -f $(BASEFILENAME).def ../../lib/$(PADLLV).a
 
 $(PLAT_DIR)pa_core.o: $(CORE_SRC) Makefile $(PAINC)
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -68,3 +84,4 @@ $(PLAT_DIR)pa_core.o: $(CORE_SRC) Makefile $(PAINC)
 
 $(GLOBAL_INCLUDES) : ../../include/% : pa_common/%
 	cp -f pa_common/$(@F) ../../include/$(@F)
+
