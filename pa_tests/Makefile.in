@@ -20,6 +20,10 @@ RANLIB = @RANLIB@
 INSTALL = @INSTALL@
 SHARED_FLAGS = @SHARED_FLAGS@
 DLL_LIBS = @DLL_LIBS@
+TOOLROOT=@TOOLROOT@
+LOCALOPT=@LOCALOPT@
+LOCALLINK=@LOCALLINK@
+LOCALDLINK=@LOCALDLINK@
 
 
 SOURCES = \
@@ -52,7 +56,7 @@ EXECS = $(SOURCES:%.c=../bin/%@EXEEXT@)
 all: $(EXECS)
 
 $(EXECS): ../bin/%@EXEEXT@: Makefile %.c
-	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS) $(LDFLAGS)
+	$(CC) -o $@ $(CFLAGS) $*.c -L../../../lib $(LIBS) $(LDFLAGS) $(LOCALOPT) $(LOCALLINK)
 
 clean:
 	echo No intermediate files here 
@@ -61,4 +65,4 @@ distclean: clean
 	cd ../bin;$(RM) -f $(EXECS);cd ../pa_tests
 
 %.@OBJEXT@: %.c Makefile $(PAINC)
-	$(CC) -c $(CFLAGS) $< -o $@
+	$(CC) -c $(CFLAGS) $< -o $@ $(LOCALOPT)

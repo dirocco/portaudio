@@ -30,6 +30,8 @@ else
 	AC_MSG_RESULT([Setting builds to use shared libraries]);
 fi
 	
+AC_ARG_WITH([toolroot],[  --with-toolroot[=DIR]   Use DIR as the root for all tools],ac_toolroot=$withval,ac_toolroot=[])
+
 
 dnl Extra variables we want to substitue
 AC_SUBST(CORE_SRC)
@@ -37,13 +39,19 @@ AC_SUBST(PLAT_DIR)
 AC_SUBST(PADLL)
 AC_SUBST(SHARED_FLAGS)
 AC_SUBST(DLL_LIBS)
+AC_SUBST(TOOLROOT)
+AC_SUBST(LOCALOPT)
+AC_SUBST(LOCALLINK)
+AC_SUBST(LOCALDLINK)
 AC_SUBST(SHARED_LIB_CONDITIONAL)
 AC_SUBST(STATIC_LIB_CONDITIONAL)
+AC_SUBST(DLLTOOL)
 dnl Determine the host operating system / platform
 
 dnl By default, we build a shared library with no post processing
 SHARED_LIB_CONDITIONAL=buildsharedlib
 STATIC_LIB_CONDITIONAL=buildstaticlib
+DLLTOOL=dlltool
 
 case "${host_os}" in
   darwin* )
@@ -77,6 +85,18 @@ case "${host_os}" in
         PADLL="portaudio.dll";
         SHARED_FLAGS="-shared -mthreads";
         DLL_LIBS="-lwinmm";
+        if [[ "$ac_toolroot" != "" ]] ; then
+                AC_MSG_RESULT([Setting toolroot to $ac_toolroot]);
+                TOOLROOT="$ac_toolroot";
+                LOCALOPT="-nostdinc -nostdlib -I$TOOLROOT/usr/include -I$TOOLROOT/usr/lib/gcc-lib/i686-pc-cygwin/3.2/include -I$TOOLROOT/usr/include/w32api -L$TOOLROOT/usr/lib -B$TOOLROOT/lib/"
+                LOCALLINK="$TOOLROOT/usr/lib/crt0.o -lg -lcygwin -lkernel32";
+                LOCALDLINK="-lcygwin -lkernel32";
+                CC="$TOOLROOT/usr/bin/$CC";
+                AR="$TOOLROOT/$AR";
+		RANLIB="$TOOLROOT/usr/bin/$RANLIB";
+		DLLTOOL="$TOOLROOT/usr/bin/dlltool";
+        fi
+
         ;;
 
   *)
