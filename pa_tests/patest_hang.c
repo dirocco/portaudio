@@ -1,5 +1,5 @@
 /*
- * $Id: patest_hang.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_hang.c,v 1.2 2003/02/13 18:30:14 darreng Exp $
  * Play a sine then hang audio callback to test watchdog.
  *
  * Authors:
@@ -129,10 +129,12 @@ int main(void)
     {
         printf("Sleep for %d milliseconds in audio callback.\n", i );
         data.sleepFor = i;
+        fflush(stdout);
         Pa_Sleep( ((i<1000) ? 1000 : i) );
     }
     
     printf("Suffer for 10 seconds.\n");
+    fflush(stdout);
     Pa_Sleep( 10000 );
     
     err = Pa_StopStream( stream );

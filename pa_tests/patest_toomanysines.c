@@ -1,5 +1,5 @@
 /*
- * $Id: patest_toomanysines.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_toomanysines.c,v 1.2 2003/02/13 18:31:34 darreng Exp $
  * Play more sine waves than we can handle in real time as a stress test,
  *
  * Authors:
@@ -138,6 +138,7 @@ int main(void)
 
         load = Pa_GetCPULoad( stream );
         printf("numSines = %d, CPU load = %f\n", data.numSines, load );
+        fflush(stdout);
     }
     while( load < 0.5 );
     
@@ -148,6 +149,8 @@ int main(void)
         Pa_Sleep( 200 );
         load = Pa_GetCPULoad( stream );
         printf("STRESSING: numSines = %d, CPU load = %f\n", data.numSines, load );
+        fflush(stdout);
+
     }
     
     printf("Suffer for 5 seconds.\n");

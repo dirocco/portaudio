@@ -1,5 +1,5 @@
 /*
- * $Id: patest_many.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_many.c,v 1.2 2003/02/13 18:30:23 darreng Exp $
  * patest_many.c
  * Start and stop the PortAudio Driver multiple times.
  *
@@ -180,6 +180,7 @@ PaError TestOnce( void )
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
     printf("Waiting for sound to finish.\n");
+    fflush(stdout);
     Pa_Sleep(1000);
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;

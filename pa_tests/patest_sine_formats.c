@@ -1,5 +1,5 @@
 /*
- * $Id: patest_sine_formats.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_sine_formats.c,v 1.2 2003/02/13 18:31:21 darreng Exp $
  * patest_sine_formats.c
  * Play a sine wave using the Portable Audio api for several seconds.
  * Test various data formats.
@@ -38,17 +38,18 @@
 #include <math.h>
 #include "portaudio.h"
 
-#define NUM_SECONDS        (20)
+#define NUM_SECONDS        (5)
 #define SAMPLE_RATE        (44100)
 #define FRAMES_PER_BUFFER  (512)
-#define LEFT_FREQ          (SAMPLE_RATE/256.0)  /* So we hit 1.0 */
+#define LEFT_FREQ          ((2 * SAMPLE_RATE)/FRAMES_PER_BUFFER)  /* So we hit 1.0 */
 #define RIGHT_FREQ         (500.0)
-#define AMPLITUDE          (1.0)
+#define AMPLITUDE          (0.9)
 
 /* Select ONE format for testing. */
 #define TEST_UINT8    (0)
 #define TEST_INT8     (0)
-#define TEST_INT16    (1)
+#define TEST_INT16    (0)
+#define TEST_INT32    (1)
 #define TEST_FLOAT32  (0)
 
 #if TEST_UINT8
@@ -71,6 +72,13 @@ typedef short               SAMPLE_t;
 #define SAMPLE_ZERO         (0)
 #define DOUBLE_TO_SAMPLE(x) (SAMPLE_ZERO + (SAMPLE_t)(32767 * (x)))
 #define FORMAT_NAME         "Signed 16 Bit"
+
+#elif TEST_INT32
+#define TEST_FORMAT         paInt32
+typedef long               SAMPLE_t;
+#define SAMPLE_ZERO         (0)
+#define DOUBLE_TO_SAMPLE(x) (SAMPLE_ZERO + (SAMPLE_t)(0x7FFFFFFF * (x)))
+#define FORMAT_NAME         "Signed 32 Bit"
 
 #elif TEST_FLOAT32
 #define TEST_FORMAT         paFloat32
@@ -176,7 +184,7 @@ int main(void)
     err = Pa_StartStream( stream );
     if( err != paNoError ) goto error;
 
-    printf("Waiting %d seconds for sound to finish.\n", NUM_SECONDS );
+    printf("Waiting %d seconds for sound to finish.\n", NUM_SECONDS ); fflush(stdout);
     while( Pa_StreamActive( stream ) ) Pa_Sleep(10);
 
     err = Pa_CloseStream( stream );

@@ -1,5 +1,5 @@
 /*
- * $Id: pa_fuzz.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: pa_fuzz.c,v 1.2 2003/02/13 18:29:28 darreng Exp $
  * pa_fuzz.c
  * Distort input like a fuzz boz.
  *
@@ -138,6 +138,7 @@ int main(void)
     if( err != paNoError ) goto error;
 
     printf("Hit ENTER to stop program.\n");
+    fflush(stdout);
     getchar();
     err = Pa_CloseStream( stream );
     if( err != paNoError ) goto error;

@@ -1,5 +1,5 @@
 /*
- * $Id: pa_devs.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: pa_devs.c,v 1.2 2003/02/13 18:29:19 darreng Exp $
  * pa_devs.c
  * List available devices.
  *
@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "portaudio.h"
+
 /*******************************************************************/
 int main(void);
 int main(void)

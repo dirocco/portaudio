@@ -1,5 +1,5 @@
 /*
- * $Id: patest_multi_sine.c,v 1.1 2003/01/15 06:10:15 gsilber Exp $
+ * $Id: patest_multi_sine.c,v 1.2 2003/02/13 18:30:41 darreng Exp $
  * patest_multi_out.c
  * Play a different sine wave on each channels,
  * using the Portable Audio api.
@@ -66,7 +66,6 @@ static int patestCallback( void *inputBuffer, void *outputBuffer,
     paTestData *data = (paTestData*)userData;
     float *out = (float*)outputBuffer;
     int frameIndex, channelIndex;
-    int finished = 0;
     (void) outTime; /* Prevent unused variable warnings. */
     (void) inputBuffer;
 
@@ -75,7 +74,7 @@ static int patestCallback( void *inputBuffer, void *outputBuffer,
         for( channelIndex=0; channelIndex<data->numChannels; channelIndex++ )
         {
             /* Output sine wave on every channel. */
-            *out++ = (float) sin(data->phases[channelIndex]);
+            *out++ = (float) (0.7 * sin(data->phases[channelIndex]));
 
             /* Play each channel at a higher frequency. */
             data->phases[channelIndex] += FREQ_INCR * (4 + channelIndex);
