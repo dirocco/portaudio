@@ -38,7 +38,6 @@ SOURCES = \
 	patest_maxsines.c \
 	patest_multi_sine.c \
 	patest_pink.c \
-	patest_record.c \
 	patest_ringmix.c \
 	patest_saw.c \
 	patest_sine8.c \
@@ -50,6 +49,9 @@ SOURCES = \
 	patest_toomanysines.c \
 	patest_underflow.c \
 	patest_wire.c \
+
+# This test is generates warnings
+#	patest_record.c \
 
 EXECS = $(SOURCES:%.c=../bin/%@EXEEXT@)
 
