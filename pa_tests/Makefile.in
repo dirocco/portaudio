@@ -44,12 +44,6 @@ SOURCES = \
 	patest_toomanysines.c \
 	patest_underflow.c \
 	patest_wire.c \
-	test_rw.c \
-	test_rw_echo.c \
-	test_w_saw8.c \
-	test_w_saw.c \
-	passthru.c \
-	sine.c
 
 EXECS = $(SOURCES:%.c=../bin/%@EXEEXT@)
 
