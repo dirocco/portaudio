@@ -68,8 +68,6 @@ if test x"$1" = x"--clean"; then
 		test -f $cf && \
 		$RM $cf
 	done
-	#aclocal.m4 created by aclocal
-	test -f $ACLOCAL_FILES && $RM $ACLOCAL_FILES
 	#Clean Autoheader Generated files
 	for cf in $AUTOHEADER_FILES; do
 		cf=$CONFIG_AUX_DIR$cf
@@ -94,13 +92,15 @@ if test x"$1" = x"--clean"; then
 		test -f $cf && \
 		$RM $cf
 	done
-	$RM -r autom4te*
 else
 	$LIBTOOLIZE > /dev/null
 	$ACLOCAL
 	$AUTOHEADER
 	#$AUTOMAKE
 	$AUTOCONF
+	#aclocal.m4 created by aclocal
+	test -f $ACLOCAL_FILES && $RM $ACLOCAL_FILES
+	$RM -r -f autom4te*
 fi
 
 
