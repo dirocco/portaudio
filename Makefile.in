@@ -83,7 +83,7 @@ clean:
 
 distclean: clean
 	rm -f Makefile
-	rm -f bin/*
+	rm -f $(TESTS) 
 	rm -f ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
 
 %.o: %.c Makefile $(PAINC)
