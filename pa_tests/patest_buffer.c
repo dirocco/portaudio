@@ -1,5 +1,5 @@
 /*
- * $Id: patest_buffer.c,v 1.2 2003/02/13 18:30:05 darreng Exp $
+ * $Id: patest_buffer.c,v 1.3 2003/08/06 08:22:42 keng Exp $
  * patest_buffer.c
  * Test opening streams with different buffer sizes.
  *
@@ -117,6 +117,8 @@ int main(void)
     int i;
     PaError err;
     printf("Test opening streams with different buffer sizes\n\n");
+
+    while(1);
 
     for (i = 0 ; i < BUFFER_TABLE; i++)
     {
