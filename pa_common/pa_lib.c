@@ -1,5 +1,5 @@
 /*
- * $Id: pa_lib.c,v 1.1 2003/01/15 06:10:14 gsilber Exp $
+ * $Id: pa_lib.c,v 1.2 2003/02/02 01:41:33 darreng Exp $
  * Portable Audio I/O Library
  * Host Independant Layer
  *
@@ -607,7 +607,7 @@ long Pa_CallConvertInt16( internalPortAudioStream   *past,
                 {
                     for( i=0; i<samplesPerBuffer; i++ )
                     {
-                        inBufPtr[i] = ((unsigned char)(nativeInputBuffer[i] >> 8)) + 0x80;
+                        inBufPtr[i] = (unsigned char)((nativeInputBuffer[i] >> 8) + 0x80);
                     }
                 }
                 else
@@ -720,7 +720,7 @@ long Pa_CallConvertInt16( internalPortAudioStream   *past,
                 char *outBufPtr = (char *) past->past_OutputBuffer;
                 for( i=0; i<samplesPerBuffer; i++ )
                 {
-                    *nativeOutputBuffer++ = ((short)outBufPtr[i]) << 8;
+                    *nativeOutputBuffer++ = (short) (((int)outBufPtr[i]) << 8);
                 }
                 break;
             }
@@ -730,7 +730,7 @@ long Pa_CallConvertInt16( internalPortAudioStream   *past,
                 unsigned char *outBufPtr = (unsigned char *) past->past_OutputBuffer;
                 for( i=0; i<samplesPerBuffer; i++ )
                 {
-                    *nativeOutputBuffer++ = ((short)(outBufPtr[i] - 0x80)) << 8;
+                    *nativeOutputBuffer++ = (short) (((int)(outBufPtr[i] - 0x80)) << 8);
                 }
                 break;
             }
