@@ -35,7 +35,7 @@ case "${host_os}" in
 
         OTHER_OBJS="pa_mac_core/pa_mac_core.o";
         LIBS="-framework CoreAudio -lm";
-        PADLL="libportaudio.dylib";
+        PADLL="libportaudio.dylib.0.0.18";
         SHARED_FLAGS="-framework CoreAudio -dynamiclib";
         ;;
 
@@ -68,7 +68,7 @@ case "${host_os}" in
 
         OTHER_OBJS="pa_unix_oss/pa_unix_oss.o";
         LIBS="-lm -lpthread";
-        PADLL="libportaudio.so";
+        PADLL="libportaudio.0.0.18.so";
         SHARED_FLAGS="-shared";
 esac
 
