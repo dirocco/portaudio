@@ -12,5 +12,5 @@ SUBDIRS=
 CONFIGROOT=..
 
 #includes for a configure child
-include ../../make-includes/config.make.inc
-include ../../make-includes/config.child.make.inc
+include ../../../include/make-includes/config.make.inc
+include ../../../include/make-includes/config.child.make.inc
