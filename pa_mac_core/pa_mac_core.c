@@ -1,5 +1,5 @@
 /*
- * $Id: pa_mac_core.c,v 1.4 2003/04/29 02:23:13 darreng Exp $
+ * $Id: pa_mac_core.c,v 1.5 2003/04/29 02:40:47 darreng Exp $
  * pa_mac_core.c
  * Implementation of PortAudio for Mac OS X Core Audio
  *
@@ -123,7 +123,7 @@
 #include "portaudio.h"
 #include "pa_host.h"
 #include "pa_trace.h"
-#include "ringbuffer.h"
+#include "../../pablio/ringbuffer.h"
 
 /************************************************* Configuration ********/
 #define PA_ENABLE_LOAD_MEASUREMENT  (1)
