@@ -1,0 +1,93 @@
+# Generated automatically from Makefile.in by configure.
+#
+# PortAudio Makefile.in
+#
+# Dominic Mazzoni
+#
+# Modified By: H. Gregory Silber
+#
+# WARNING: MODIFY THIS FILE AT YOUR OWN RISK.  THIS FILE SOON TO BE REMOVED
+# 	AND REPLACED WITH AUTO GENERATED FILES USING AUTOMAKE
+#	IF YOU MUST MODIFY THIS FILE, PLEASE NOTE YOUR CHANGES IN DETAIL
+#	DIRECTLY BENEATH THIS MESSAGE
+#
+
+PREFIX = /usr/local
+CC = cl
+CFLAGS = -Zi -Ipa_common
+LIBS = winmm.lib
+AR = /usr/bin/ar
+DLLTOOL=dlltool
+RANLIB = ranlib
+INSTALL = @INSTALL@
+SHARED_FLAGS = -DEBUG -DLL
+DLL_LIBS = winmm.lib
+TOOLROOT=
+LOCALOPT=
+LOCALLINK=
+LOCALDLINK=
+
+PLAT_DIR = pa_win_wmme/
+CORE_SRC = $(PLAT_DIR)pa_win_wmme.c
+
+BASEFILENAME = portaudio
+PALIB = lib$(BASEFILENAME).a
+PADLL = portaudio.dll
+PADLLV = $(PADLL)
+PAINC = pa_common/portaudio.h
+
+COMMON_OBJS = \
+	pa_common/pa_convert.o \
+	pa_common/pa_lib.o
+
+GLOBAL_INCLUDES = \
+	../../include/portaudio.h 
+
+OBJS = $(COMMON_OBJS) $(PLAT_DIR)pa_core.o
+
+all: $(GLOBAL_INCLUDES) libs tests
+
+tests: 
+	$(MAKE) -C pa_tests
+
+libs: buildstaticlib builddll
+	#
+
+builddll:../../lib/$(PADLLV) $(BASEFILENAME).def ../../lib/$(PADLLV).a 
+	#
+
+$(BASEFILENAME).def:$(OBJS)
+	$(DLLTOOL) --export-all-symbols -z $(BASEFILENAME).def $(OBJS)
+
+../../lib/$(PADLLV).a:$(BASEFILENAME).def
+	$(DLLTOOL) --def $(BASEFILENAME).def --dllname $(PADLLV) --output-lib ../../lib/$(PADLLV).a
+
+buildsharedlib:../../lib/$(PADLLV)
+
+buildstaticlib:../../lib/$(PALIB)
+
+../../lib/$(PALIB): $(OBJS) Makefile $(PAINC)
+	$(AR) ruv ../../lib/$(PALIB) $(OBJS)
+	$(RANLIB) ../../lib/$(PALIB)
+
+../../lib/$(PADLLV): $(OBJS) Makefile $(PAINC)
+	link $(SHARED_FLAGS) -OUT:../../lib/$(PADLLV) $(OBJS) $(DLL_LIBS) $(LOCALOPT) $(LOCALDLINK)
+
+clean:
+	rm -f $(OBJS) 
+	$(MAKE) -C pa_tests clean
+
+distclean: clean
+	$(MAKE) -C pa_tests distclean
+	rm -f ../../lib/$(PALIB) ../../lib/$(PADLLV) $(GLOBAL_INCLUDES)
+	rm -f $(BASEFILENAME).def ../../lib/$(PADLLV).a
+
+$(PLAT_DIR)pa_core.o: $(CORE_SRC) Makefile $(PAINC)
+	$(CC) -c $(CFLAGS) $< -Fo$@ $(LOCALOPT)
+
+%.o: %.c Makefile $(PAINC)
+	$(CC) -c $(CFLAGS) $< -Fo$@ $(LOCALOPT)
+
+$(GLOBAL_INCLUDES) : ../../include/% : pa_common/%
+	cp -f pa_common/$(@F) ../../include/$(@F)
+
