@@ -62,7 +62,7 @@ clean:
 	echo No intermediate files here 
 
 distclean: clean
-	cd ../bin;$(RM) -f $(EXECS);cd ../tests
+	cd ../bin;$(RM) -f $(EXECS);cd ../pa_tests
 
 %.@OBJEXT@: %.c Makefile $(PAINC)
 	$(CC) -c $(CFLAGS) $< -o $@
