@@ -2,7 +2,7 @@
 #define PA_HOST_H
 
 /*
- * $Id: pa_host.h,v 1.2 2003/04/29 02:23:42 darreng Exp $
+ * $Id: pa_host.h,v 1.3 2009/05/25 19:11:50 keng Exp $
  * Host dependant internal API for PortAudio
  *
  * Author: Phil Burk  <philburk@softsynth.com>
@@ -52,7 +52,9 @@ extern "C"
     typedef long int32;
 #endif
 #ifndef uint32
+#ifndef _UINT32
     typedef unsigned long uint32;
+#endif
 #endif
 #ifndef int16
     typedef short int16;
