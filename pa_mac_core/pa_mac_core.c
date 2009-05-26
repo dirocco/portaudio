@@ -1,5 +1,5 @@
 /*
- * $Id: pa_mac_core.c,v 1.5 2003/04/29 02:40:47 darreng Exp $
+ * $Id: pa_mac_core.c,v 1.6 2009/05/26 00:34:22 keng Exp $
  * pa_mac_core.c
  * Implementation of PortAudio for Mac OS X Core Audio
  *
@@ -1003,8 +1003,11 @@ static OSStatus PaOSX_HandleOutput( internalPortAudioStream   *past,
 
     deinterleavingNeeded = past->past_NumOutputChannels != outOutputData->mBuffers[0].mNumberChannels;
     
-	numFramesInOutputBuffer = outOutputData->mBuffers[0].mDataByteSize /
-        (sizeof(float) * outOutputData->mBuffers[0].mNumberChannels);
+	if(outOutputData->mBuffers[0].mNumberChannels)
+		numFramesInOutputBuffer = outOutputData->mBuffers[0].mDataByteSize /
+			(sizeof(float) * outOutputData->mBuffers[0].mNumberChannels);
+	else
+		numFramesInOutputBuffer = 0;
     
     if( pahsc->mode != PA_MODE_INPUT_ONLY )
     {
